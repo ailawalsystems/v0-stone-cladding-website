@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { Settings, Mail, Image, Layers, MessageSquare } from 'lucide-react'
+import { Settings, Mail, Image, Layers, MessageSquare, Sparkles } from 'lucide-react'
 
-type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'consultation'
+type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'consultation' | 'ai'
 
 interface AdminNavProps {
   activeTab: Tab
@@ -16,6 +16,7 @@ export default function AdminNav({ activeTab, onTabChange }: AdminNavProps) {
     { id: 'images', label: 'Placements', icon: <Image className="w-4 h-4" /> },
     { id: 'materials', label: 'Materials', icon: <Layers className="w-4 h-4" /> },
     { id: 'consultation', label: 'Consultation', icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 'ai', label: 'AI Assistant', icon: <Sparkles className="w-4 h-4" /> },
   ]
 
   return (
