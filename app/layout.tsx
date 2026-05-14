@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono, Space_Grotesk, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import VideoPreloader from '@/components/video-preloader'
 import { ConsultationProvider } from '@/components/consultation-provider'
 import ConsultationPopup from '@/components/consultation-popup'
 import { AIAssistantProvider } from '@/components/ai-assistant-provider'
@@ -48,18 +49,20 @@ export default function RootLayout({
       ..._inter.style
     } as React.CSSProperties}>
       <body className="font-sans antialiased bg-[#0a0a0a] text-white flex flex-col min-h-screen">
-        <AIAssistantProvider>
-          <ConsultationProvider>
-            <div className="flex-1">
-              {children}
-            </div>
-            <Footer />
-            <ConsultationPopup />
-            <FloatingAIButton />
-            <AIAssistantModal />
-            {process.env.NODE_ENV === 'production' && <Analytics />}
-          </ConsultationProvider>
-        </AIAssistantProvider>
+        <VideoPreloader>
+          <AIAssistantProvider>
+            <ConsultationProvider>
+              <div className="flex-1">
+                {children}
+              </div>
+              <Footer />
+              <ConsultationPopup />
+              <FloatingAIButton />
+              <AIAssistantModal />
+              {process.env.NODE_ENV === 'production' && <Analytics />}
+            </ConsultationProvider>
+          </AIAssistantProvider>
+        </VideoPreloader>
       </body>
     </html>
   )
