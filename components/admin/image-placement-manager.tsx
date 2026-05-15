@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MediaAsset, ImageGalleryConfig } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Link2, X, Save } from 'lucide-react'
+import { Link2, X, Save, Upload, Trash2, Check, AlertCircle } from 'lucide-react'
 
 interface ImagePlacementManagerProps {
   adminKey: string
@@ -18,6 +18,10 @@ export function ImagePlacementManager({ adminKey }: ImagePlacementManagerProps) 
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null)
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [message, setMessage] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error' | ''>('')
 
   useEffect(() => {
     loadData()
@@ -72,10 +76,109 @@ export function ImagePlacementManager({ adminKey }: ImagePlacementManagerProps) 
     }
   }
 
+  const showToast = (msg: string, type: 'success' | 'error') => {
+    setToastMessage(msg)
+    setToastType(type)
+    setTimeout(() => {
+      setToastType('')
+      setToastMessage('')
+    }, 3000)
+  }
+
   const handleSaveAssignment = async () => {
     if (!selectedPlacement || !selectedMedia) return
     await assignMediaToPlacement(selectedPlacement, selectedMedia)
     setSelectedMedia(null)
+    showToast('Placement updated successfully', 'success')
+  }
+
+  const handleUploadReplaceImage = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!uploadFile || !selectedPlacement || !selectedPlacementData?.mediaId) {
+      showToast('Please select a file', 'error')
+      return
+    }
+
+    setIsUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', uploadFile)
+      formData.append('type', 'image')
+      formData.append('title', selectedPlacementData.label)
+      formData.append('description', `Replacement for ${selectedPlacementData.label}`)
+
+      const uploadResponse = await fetch('/api/media', {
+        method: 'POST',
+        headers: { 'x-admin-key': adminKey },
+        body: formData,
+      })
+
+      if (!uploadResponse.ok) {
+        showToast('Failed to upload image', 'error')
+        setIsUploading(false)
+        return
+      }
+
+      const uploadedData = await uploadResponse.json()
+      const newMediaId = uploadedData.asset.id
+
+      // Now assign the new media to the placement
+      const assignResponse = await fetch('/api/media/placements', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey,
+        },
+        body: JSON.stringify({ placementKey: selectedPlacement, mediaId: newMediaId }),
+      })
+
+      if (assignResponse.ok) {
+        const data = await assignResponse.json()
+        setGallery(data.gallery)
+        setUploadFile(null)
+        const fileInput = document.getElementById('placement-file-input') as HTMLInputElement
+        if (fileInput) fileInput.value = ''
+        showToast('Image replaced successfully', 'success')
+        // Reload media list
+        loadData()
+      } else {
+        showToast('Failed to assign image to placement', 'error')
+      }
+    } catch (error) {
+      console.error('[v0] Upload error:', error)
+      showToast('Error uploading image', 'error')
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleRemoveImage = async () => {
+    if (!selectedPlacement || !selectedPlacementData?.mediaId) return
+    if (!confirm('Are you sure you want to remove this image from the placement?')) return
+
+    try {
+      const response = await fetch('/api/media/placements', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': adminKey,
+        },
+        body: JSON.stringify({ placementKey: selectedPlacement, mediaId: '' }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setGallery(data.gallery)
+        setUploadFile(null)
+        showToast('Image removed successfully', 'success')
+      } else {
+        showToast('Failed to remove image', 'error')
+      }
+    } catch (error) {
+      console.error('[v0] Remove error:', error)
+      showToast('Error removing image', 'error')
+    }
   }
 
   const getFilteredMedia = () => {
@@ -108,6 +211,22 @@ export function ImagePlacementManager({ adminKey }: ImagePlacementManagerProps) 
           Assign media assets to specific placements across your website
         </p>
       </div>
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className={`fixed top-4 right-4 p-4 rounded-lg border flex items-center gap-2 animate-in fade-in ${
+          toastType === 'success'
+            ? 'bg-green-500/20 border-green-500/30 text-green-300'
+            : 'bg-red-500/20 border-red-500/30 text-red-300'
+        }`}>
+          {toastType === 'success' ? (
+            <Check className="w-4 h-4" />
+          ) : (
+            <AlertCircle className="w-4 h-4" />
+          )}
+          {toastMessage}
+        </div>
+      )}
 
       {/* Message */}
       {message && (
@@ -157,102 +276,76 @@ export function ImagePlacementManager({ adminKey }: ImagePlacementManagerProps) 
           </div>
         </div>
 
-        {/* Media Selection */}
+        {/* Media Selection and Preview */}
         <div className="space-y-4">
           {selectedPlacementData ? (
             <>
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Assign Media to: {selectedPlacementData.label}
+                  {selectedPlacementData.label}
                 </h3>
                 <p className="text-sm text-gray-400">{selectedPlacementData.description}</p>
               </div>
 
-              {/* Category Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Filter by Category
-                </label>
-                <select
-                  value={filterCategory}
-                  onChange={(e) => setFilterCategory(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white"
-                >
-                  <option value="all">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Media Grid */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">
-                  Available Media
-                </label>
-                <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
-                  {getFilteredMedia().map((asset) => (
-                    <button
-                      key={asset.id}
-                      onClick={() => setSelectedMedia(selectedMedia === asset.id ? null : asset.id)}
-                      className={`relative p-2 rounded-lg border-2 transition-all duration-200 overflow-hidden ${
-                        selectedMedia === asset.id
-                          ? 'border-orange-500 bg-orange-500/20'
-                          : 'border-white/10 bg-white/5 hover:border-white/20'
-                      }`}
-                    >
-                      {asset.url && (
-                        <div className="relative w-full h-20 mb-2 rounded overflow-hidden bg-black/20">
-                          <img
-                            src={asset.url}
-                            alt={asset.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <p className="text-xs font-medium text-white truncate">
-                        {asset.title}
-                      </p>
-                      <p className="text-xs text-gray-500">{asset.category}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-4 border-t border-white/10">
-                {selectedMedia && (
-                  <Button
-                    onClick={handleSaveAssignment}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    <Save className="w-4 h-4 mr-2" />
-                    Assign Selected Media
-                  </Button>
-                )}
-                {selectedPlacementData.mediaId && (
-                  <Button
-                    onClick={() => assignMediaToPlacement(selectedPlacementData.placementKey, '')}
-                    variant="outline"
-                    className="flex-1 text-red-400 border-red-400/30 hover:bg-red-500/10"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Remove Assignment
-                  </Button>
-                )}
-              </div>
-
-              {/* Current Assignment */}
-              {selectedPlacementData.mediaId && (
-                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                  <p className="text-sm text-green-300">
-                    <strong>Currently Assigned:</strong>{' '}
-                    {getMediaForPlacement(selectedPlacementData.mediaId)?.title}
+              {/* Current Image Preview */}
+              {selectedPlacementData.mediaId && getMediaForPlacement(selectedPlacementData.mediaId) && (
+                <div className="space-y-3 p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <p className="text-sm font-semibold text-green-300">Current Image</p>
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden bg-black/20 border border-white/10">
+                    <img
+                      src={getMediaForPlacement(selectedPlacementData.mediaId)!.url}
+                      alt={getMediaForPlacement(selectedPlacementData.mediaId)!.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-300">
+                    {getMediaForPlacement(selectedPlacementData.mediaId)!.title}
                   </p>
                 </div>
               )}
+
+              {/* Replace/Upload Section */}
+              <div className="space-y-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                <p className="text-sm font-semibold text-blue-300">
+                  {selectedPlacementData.mediaId ? 'Replace Image' : 'Upload Image'}
+                </p>
+                <form onSubmit={handleUploadReplaceImage} className="space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-2">Select Image File</label>
+                    <input
+                      id="placement-file-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      className="w-full text-sm text-gray-300"
+                    />
+                    {uploadFile && (
+                      <p className="text-xs text-gray-400 mt-2">Selected: {uploadFile.name}</p>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isUploading || !uploadFile}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {isUploading ? 'Uploading...' : selectedPlacementData.mediaId ? 'Replace Image' : 'Upload Image'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Remove Image Section */}
+              {selectedPlacementData.mediaId && (
+                <button
+                  onClick={handleRemoveImage}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 text-sm rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove Image
+                </button>
+              )}
+
+
             </>
           ) : (
             <div className="text-gray-400 text-center py-8">
