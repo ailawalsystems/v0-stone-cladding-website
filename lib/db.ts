@@ -148,6 +148,7 @@ export interface AIProviderConfig {
     costPer1kTokens: number
   }[]
   defaultModel: string
+  applicationDefaultModel?: string // application-wide default model for this provider
   rateLimitPerMinute: number
   createdAt: string
   updatedAt: string

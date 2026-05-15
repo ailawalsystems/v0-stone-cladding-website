@@ -226,7 +226,9 @@ function ProviderSettings({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {providers.map(provider => (
+        {providers.map(provider => {
+          const appDefaultModel = provider.models.find(m => m.id === provider.applicationDefaultModel)
+          return (
           <motion.div
             key={provider.id}
             className="p-4 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
@@ -235,11 +237,20 @@ function ProviderSettings({
             }}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-1">
                 <span className="text-2xl">{providerIcons[provider.provider]}</span>
-                <div>
-                  <p className="font-semibold text-white">{provider.name}</p>
-                  <p className="text-xs text-gray-400">{provider.models.length} models available</p>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-white">{provider.name}</p>
+                    {provider.applicationDefaultModel && (
+                      <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-500/50">
+                        App Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {provider.models.length} models {appDefaultModel && `• Using: ${appDefaultModel.displayName}`}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -290,26 +301,27 @@ function ProviderSettings({
                     <label className="text-sm text-gray-300 block mb-2">Models</label>
                     <div className="space-y-2">
                       {provider.models.map(model => (
-                        <div key={model.id} className="flex items-center justify-between p-2 rounded bg-white/5">
-                          <div>
+                        <div key={model.id} className="flex items-center gap-2 p-2 rounded bg-white/5">
+                          <div className="flex-1">
                             <p className="text-xs font-medium text-white">{model.displayName}</p>
                             <p className="text-xs text-gray-500">{model.contextWindow.toLocaleString()} tokens</p>
                           </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              if (selectedProvider === provider.provider) {
-                                onProviderSelect(provider.provider)
-                              }
-                            }}
-                            className={`px-2 py-1 rounded text-xs ${
-                              provider.defaultModel === model.id
-                                ? 'bg-orange-500/20 border border-orange-500/50 text-orange-300'
-                                : 'bg-white/5 text-gray-400'
-                            }`}
-                          >
-                            {provider.defaultModel === model.id ? 'Default' : 'Select'}
-                          </button>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onUpdate(provider.id, { applicationDefaultModel: model.id })
+                              }}
+                              className={`px-2 py-1 rounded text-xs whitespace-nowrap transition-colors ${
+                                provider.applicationDefaultModel === model.id
+                                  ? 'bg-blue-500/20 border border-blue-500/50 text-blue-300'
+                                  : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                              }`}
+                              title="Set as application default"
+                            >
+                              {provider.applicationDefaultModel === model.id ? '★ App Default' : '☆ Set Default'}
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -318,7 +330,8 @@ function ProviderSettings({
               )}
             </AnimatePresence>
           </motion.div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
@@ -341,8 +354,24 @@ function ModelSettings({
   const selectedProvider = providers.find(p => p.provider === config.provider)
   const models = selectedProvider?.models || []
 
+  const appDefaultModel = selectedProvider?.applicationDefaultModel
+  const appDefaultModelObj = selectedProvider?.models.find(m => m.id === appDefaultModel)
+
   return (
     <div className="space-y-6 p-6 rounded-lg bg-white/5 border border-white/10">
+      {/* Info Box */}
+      {appDefaultModel && (
+        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-start gap-3">
+          <div className="text-blue-400 flex-shrink-0 mt-0.5">ℹ️</div>
+          <div>
+            <p className="text-sm font-medium text-blue-300">Application Default Model</p>
+            <p className="text-xs text-blue-200 mt-1">
+              {selectedProvider?.name}: <span className="font-semibold">{appDefaultModelObj?.displayName}</span>
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2">Provider</label>
