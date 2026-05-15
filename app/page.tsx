@@ -11,7 +11,7 @@ import CursorTracker from '@/components/cursor-tracker'
 
 export default function Home() {
   return (
-    <main className="bg-[#0a0a0a] overflow-hidden">
+    <main className="bg-[#0a0a0a] overflow-hidden pt-16">
       <CursorTracker />
       <Header />
       <Hero />
