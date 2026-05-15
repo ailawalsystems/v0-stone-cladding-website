@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Wrench, Image as ImageIcon, Users, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { AdminImage } from '@/components/admin-image'
@@ -12,15 +12,15 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navItems = [
-    { label: 'Services', href: '#services' },
-    { label: 'Portfolio', href: '#portfolio' },
-    { label: 'About', href: '#about' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Services', href: '#services', icon: Wrench },
+    { label: 'Portfolio', href: '#portfolio', icon: ImageIcon },
+    { label: 'About', href: '#about', icon: Users },
+    { label: 'Contact', href: '#contact', icon: Mail },
   ]
 
   return (
     <motion.header 
-      className="sticky top-0 z-50 glass border-b border-white/10 bg-[#0a0a0a]/40"
+      className="fixed top-0 z-50 w-full border-b border-white/10 bg-[#0a0a0a]/50 backdrop-blur-md"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: 'easeOut' }}
@@ -34,14 +34,14 @@ export default function Header() {
             transition={{ duration: 0.3 }}
           >
             <div className="flex items-center gap-2">
-              <div className="relative h-10 w-10">
+              <div className="relative h-10 w-32 sm:w-40">
                 <AdminImage
                   placementKey="header-logo"
-                  width={40}
+                  width={160}
                   height={40}
                   alt="Octo 21st Stone Technology"
                   className="object-contain"
-                  fallbackUrl="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo%20-%20Copy-5TXvy836rjWOFMLMeBR3Mk2Vm25aFQ.png"
+                  fallbackUrl="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/logo-VBHRGcMKeURHsQI5X11xPTQrIRA39w.png"
                 />
               </div>
               <div className="hidden sm:block">
@@ -53,26 +53,30 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item, index) => (
-              <motion.div
-                key={item.href}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.4 }}
-              >
-                <Link
-                  href={item.href}
-                  className="px-4 py-2 text-sm font-medium text-gray-300 relative group"
+            {navItems.map((item, index) => {
+              const Icon = item.icon
+              return (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.4 }}
                 >
-                  {item.label}
-                  <motion.span
-                    className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600"
-                    whileHover={{ width: '100%' }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </Link>
-              </motion.div>
-            ))}
+                  <Link
+                    href={item.href}
+                    className="px-4 py-2 text-sm font-medium text-gray-300 relative group flex items-center gap-2"
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                    <motion.span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600"
+                      whileHover={{ width: '100%' }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </Link>
+                </motion.div>
+              )
+            })}
           </div>
 
           {/* Desktop CTA */}
@@ -137,22 +141,26 @@ export default function Header() {
               className="border-t border-border bg-white/5 md:hidden overflow-hidden"
             >
               <div className="py-4 px-4 flex flex-col gap-0">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={item.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="block px-4 py-3 text-sm font-medium text-gray-300 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
+                {navItems.map((item, index) => {
+                  const Icon = item.icon
+                  return (
+                    <motion.div
+                      key={item.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      {item.label}
-                    </Link>
-                  </motion.div>
-                ))}
+                      <Link
+                        href={item.href}
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-300 hover:text-orange-400 hover:bg-white/5 rounded-lg transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  )
+                })}
                 <motion.div 
                   className="px-4 pt-4 border-t border-border"
                   initial={{ opacity: 0 }}

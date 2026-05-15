@@ -129,12 +129,32 @@ export default function AdvancedConsultation() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      {/* Message Type Selection */}
+      {/* Selected Type Header - Prominent Display */}
+      {selectedTypeOption && (
+        <div className="mb-8 glass p-4 sm:p-6 rounded-xl border border-orange-500/40 bg-orange-500/10">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {(() => {
+              const Icon = selectedTypeOption.icon
+              return <Icon className="w-6 sm:w-8 h-6 sm:h-8 text-orange-400 flex-shrink-0" />
+            })()}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-2xl font-bold text-white font-space-grotesk">
+                {selectedTypeOption.label}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300">
+                {selectedTypeOption.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Message Type Selection - Responsive Mobile First */}
       <div className="mb-8">
-        <h3 className="text-xl font-bold text-white mb-6 font-space-grotesk">
-          Select Inquiry Type
+        <h3 className="text-sm sm:text-base font-semibold text-gray-300 mb-3 sm:mb-4 font-space-grotesk">
+          Change Inquiry Type
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="flex flex-wrap gap-2 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-3 md:gap-4">
           {MESSAGE_TYPES.map((type) => {
             const Icon = type.icon
             const isSelected = selectedType === type.id
@@ -142,15 +162,15 @@ export default function AdvancedConsultation() {
               <button
                 key={type.id}
                 onClick={() => handleTypeSelect(type.id)}
-                className={`glass p-4 rounded-lg border-2 transition-all duration-300 text-center group ${
+                className={`glass flex-1 sm:flex-none p-2 sm:p-4 rounded-lg border-2 transition-all duration-300 text-center group min-w-fit ${
                   isSelected
                     ? 'border-orange-500 bg-orange-500/10'
                     : 'border-white/10 hover:border-orange-500/50'
                 }`}
               >
-                <div className="flex justify-center mb-3">
+                <div className="flex justify-center mb-1 sm:mb-3">
                   <Icon
-                    className={`w-6 h-6 transition-colors ${
+                    className={`w-4 sm:w-6 h-4 sm:h-6 transition-colors ${
                       isSelected
                         ? 'text-orange-400'
                         : 'text-gray-400 group-hover:text-orange-400'
@@ -158,39 +178,18 @@ export default function AdvancedConsultation() {
                   />
                 </div>
                 <p
-                  className={`text-sm font-bold transition-colors ${
+                  className={`text-xs sm:text-sm font-bold transition-colors truncate ${
                     isSelected ? 'text-white' : 'text-gray-400'
                   }`}
                 >
                   {type.label}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">{type.description}</p>
+                <p className="hidden sm:block text-xs text-gray-500 mt-1">{type.description}</p>
               </button>
             )
           })}
         </div>
       </div>
-
-      {/* Selected Type Info */}
-      {selectedTypeOption && (
-        <div className="mb-8 glass p-6 rounded-xl border border-white/10">
-          <div className="flex items-start gap-4">
-            {(() => {
-              const Icon = selectedTypeOption.icon
-              return <Icon className="w-8 h-8 text-orange-400 flex-shrink-0 mt-1" />
-            })()}
-            <div>
-              <h4 className="text-lg font-bold text-white font-space-grotesk mb-2">
-                {selectedTypeOption.label}
-              </h4>
-              <p className="text-gray-400">
-                {selectedTypeOption.description} - We'll route your message to the appropriate
-                team member.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Contact Form */}
       <form onSubmit={handleSubmit} className="glass p-6 sm:p-8 rounded-xl border border-white/10 space-y-6">

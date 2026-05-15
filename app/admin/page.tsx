@@ -8,10 +8,11 @@ import { MessageHistory } from '@/components/admin/message-history'
 import { MaterialsManagement } from '@/components/admin/materials-management'
 import { ConsultationManagement } from '@/components/admin/consultation-management'
 import { ImagePlacementManager } from '@/components/admin/image-placement-manager'
+import { AISettingsAdvanced } from '@/components/admin/ai-settings-advanced'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 
-type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'consultation'
+type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'consultation' | 'ai'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('routing')
@@ -146,6 +147,9 @@ export default function AdminDashboard() {
           )}
           {activeTab === 'consultation' && (
             <ConsultationManagement adminKey={adminKey} />
+          )}
+          {activeTab === 'ai' && (
+            <AISettingsAdvanced adminKey={adminKey} />
           )}
         </div>
       </div>

@@ -1,0 +1,21 @@
+{
+  "id": "1",
+  "enabled": true,
+  "name": "Stone Assistant",
+  "description": "Your AI guide for stone cladding solutions",
+  "model": "gpt-3.5-turbo",
+  "knowledgeBaseEnabled": true,
+  "nlpEnabled": true,
+  "textToSpeechEnabled": true,
+  "textToSpeechVoice": "default",
+  "temperature": 0.7,
+  "maxTokens": 500,
+  "systemPrompt": "You are a helpful AI assistant specializing in stone cladding solutions. Provide expert advice about materials, installation, design, and durability. Always be professional and helpful.",
+  "accentColor": "#ff8c42",
+  "position": "bottom-right",
+  "animationEnabled": true,
+  "animationDuration": 300,
+  "backgroundColor": "rgba(10, 10, 10, 0.95)",
+  "createdAt": "2026-05-14T15:24:53.005Z",
+  "updatedAt": "2026-05-14T15:24:53.005Z"
+}

@@ -8,6 +8,9 @@ const MEDIA_FILE = path.join(DB_DIR, 'media.json')
 const MATERIALS_FILE = path.join(DB_DIR, 'materials.json')
 const CONSULTATION_CONFIG_FILE = path.join(DB_DIR, 'consultation-config.json')
 const IMAGE_GALLERY_FILE = path.join(DB_DIR, 'image-gallery.json')
+const AI_ASSISTANT_CONFIG_FILE = path.join(DB_DIR, 'ai-assistant-config.json')
+const AI_PROVIDERS_FILE = path.join(DB_DIR, 'ai-providers.json')
+const KNOWLEDGE_BASE_FILE = path.join(DB_DIR, 'knowledge-base.json')
 
 // Ensure data directory exists
 if (!fs.existsSync(DB_DIR)) {
@@ -124,6 +127,101 @@ export interface ConsultationConfig {
   animationDuration: number // ms
   animationEnabled: boolean
   closeOnBackdropClick: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'deepseek' | 'xai' | 'groq' | 'ollama'
+export type NLPFeature = 'tokenization' | 'entity-extraction' | 'sentiment-analysis' | 'keyword-extraction' | 'text-classification'
+
+export interface AIProviderConfig {
+  id: string
+  provider: AIProvider
+  name: string
+  apiKey?: string
+  isConfigured: boolean
+  models: {
+    id: string
+    name: string
+    displayName: string
+    contextWindow: number
+    costPer1kTokens: number
+  }[]
+  defaultModel: string
+  applicationDefaultModel?: string // application-wide default model for this provider
+  rateLimitPerMinute: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface NLPConfig {
+  id: string
+  enabled: boolean
+  features: {
+    tokenization: boolean
+    entityExtraction: boolean
+    sentimentAnalysis: boolean
+    keywordExtraction: boolean
+    textClassification: boolean
+  }
+  language: 'en' | 'es' | 'fr' | 'de' | 'pt' | 'ja' | 'zh'
+  caseSensitive: boolean
+  removeStopwords: boolean
+  lemmatization: boolean
+  stemming: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface KnowledgeBaseDocument {
+  id: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+  embeddings?: number[] // vector embeddings for semantic search
+  metadata: {
+    source?: string
+    author?: string
+    updatedAt: string
+  }
+  createdAt: string
+}
+
+export interface KnowledgeBase {
+  id: string
+  documents: KnowledgeBaseDocument[]
+  searchMethod: 'semantic' | 'keyword' | 'hybrid'
+  maxRetrievalResults: number
+  relevanceThreshold: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AIAssistantConfig {
+  id: string
+  enabled: boolean
+  name: string
+  description: string
+  provider: AIProvider
+  model: string
+  knowledgeBaseEnabled: boolean
+  knowledgeBasId?: string
+  nlpConfigId?: string
+  nlpEnabled: boolean
+  textToSpeechEnabled: boolean
+  textToSpeechVoice: 'default' | 'alt1' | 'alt2'
+  temperature: number
+  maxTokens: number
+  topP: number
+  frequencyPenalty: number
+  presencePenalty: number
+  systemPrompt: string
+  accentColor: string
+  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  animationEnabled: boolean
+  animationDuration: number
+  backgroundColor: string
   createdAt: string
   updatedAt: string
 }
@@ -283,6 +381,204 @@ function initializeImageGallery() {
   return defaultGallery
 }
 
+// Initialize AI providers
+function initializeAIProviders() {
+  if (fs.existsSync(AI_PROVIDERS_FILE)) {
+    return JSON.parse(fs.readFileSync(AI_PROVIDERS_FILE, 'utf-8'))
+  }
+
+  const defaultProviders: AIProviderConfig[] = [
+    {
+      id: '1',
+      provider: 'openai',
+      name: 'OpenAI',
+      apiKey: process.env.OPENAI_API_KEY,
+      isConfigured: !!process.env.OPENAI_API_KEY,
+      models: [
+        { id: 'gpt-4-turbo', name: 'gpt-4-turbo-preview', displayName: 'GPT-4 Turbo', contextWindow: 128000, costPer1kTokens: 0.01 },
+        { id: 'gpt-4', name: 'gpt-4', displayName: 'GPT-4', contextWindow: 8192, costPer1kTokens: 0.03 },
+        { id: 'gpt-3.5-turbo', name: 'gpt-3.5-turbo', displayName: 'GPT-3.5 Turbo', contextWindow: 4096, costPer1kTokens: 0.0005 },
+      ],
+      defaultModel: 'gpt-3.5-turbo',
+      rateLimitPerMinute: 90,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '2',
+      provider: 'anthropic',
+      name: 'Anthropic',
+      apiKey: process.env.ANTHROPIC_API_KEY,
+      isConfigured: !!process.env.ANTHROPIC_API_KEY,
+      models: [
+        { id: 'claude-opus', name: 'claude-3-opus-20240229', displayName: 'Claude 3 Opus', contextWindow: 200000, costPer1kTokens: 0.015 },
+        { id: 'claude-sonnet', name: 'claude-3-sonnet-20240229', displayName: 'Claude 3 Sonnet', contextWindow: 200000, costPer1kTokens: 0.003 },
+        { id: 'claude-haiku', name: 'claude-3-haiku-20240307', displayName: 'Claude 3 Haiku', contextWindow: 200000, costPer1kTokens: 0.00025 },
+      ],
+      defaultModel: 'claude-opus',
+      rateLimitPerMinute: 50,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '3',
+      provider: 'google',
+      name: 'Google Gemini',
+      apiKey: process.env.GOOGLE_API_KEY,
+      isConfigured: !!process.env.GOOGLE_API_KEY,
+      models: [
+        { id: 'gemini-pro', name: 'gemini-1.5-pro', displayName: 'Gemini 1.5 Pro', contextWindow: 1000000, costPer1kTokens: 0.00125 },
+        { id: 'gemini-flash', name: 'gemini-1.5-flash', displayName: 'Gemini 1.5 Flash', contextWindow: 1000000, costPer1kTokens: 0.000075 },
+      ],
+      defaultModel: 'gemini-pro',
+      rateLimitPerMinute: 60,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '4',
+      provider: 'deepseek',
+      name: 'DeepSeek',
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      isConfigured: !!process.env.DEEPSEEK_API_KEY,
+      models: [
+        { id: 'deepseek-chat', name: 'deepseek-chat', displayName: 'DeepSeek Chat', contextWindow: 32000, costPer1kTokens: 0.0002 },
+      ],
+      defaultModel: 'deepseek-chat',
+      rateLimitPerMinute: 60,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '5',
+      provider: 'xai',
+      name: 'xAI Grok',
+      apiKey: process.env.XAI_API_KEY,
+      isConfigured: !!process.env.XAI_API_KEY,
+      models: [
+        { id: 'grok-2', name: 'grok-2', displayName: 'Grok 2', contextWindow: 128000, costPer1kTokens: 0.002 },
+      ],
+      defaultModel: 'grok-2',
+      rateLimitPerMinute: 60,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '6',
+      provider: 'groq',
+      name: 'Groq',
+      apiKey: process.env.GROQ_API_KEY,
+      isConfigured: !!process.env.GROQ_API_KEY,
+      models: [
+        { id: 'mixtral-8x7b', name: 'mixtral-8x7b-32768', displayName: 'Mixtral 8x7B', contextWindow: 32768, costPer1kTokens: 0.00024 },
+        { id: 'llama2-70b', name: 'llama2-70b-4096', displayName: 'Llama 2 70B', contextWindow: 4096, costPer1kTokens: 0.0007 },
+      ],
+      defaultModel: 'mixtral-8x7b',
+      rateLimitPerMinute: 30,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: '7',
+      provider: 'ollama',
+      name: 'Ollama (Local)',
+      apiKey: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+      isConfigured: true,
+      models: [
+        { id: 'llama2', name: 'llama2', displayName: 'Llama 2', contextWindow: 4096, costPer1kTokens: 0 },
+        { id: 'mistral', name: 'mistral', displayName: 'Mistral', contextWindow: 8000, costPer1kTokens: 0 },
+        { id: 'neural-chat', name: 'neural-chat', displayName: 'Neural Chat', contextWindow: 8000, costPer1kTokens: 0 },
+      ],
+      defaultModel: 'llama2',
+      rateLimitPerMinute: 100,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ]
+
+  fs.writeFileSync(AI_PROVIDERS_FILE, JSON.stringify(defaultProviders, null, 2))
+  return defaultProviders
+}
+
+// Initialize NLP config
+function initializeNLPConfig() {
+  const defaultNLP: NLPConfig = {
+    id: '1',
+    enabled: true,
+    features: {
+      tokenization: true,
+      entityExtraction: true,
+      sentimentAnalysis: true,
+      keywordExtraction: true,
+      textClassification: true,
+    },
+    language: 'en',
+    caseSensitive: false,
+    removeStopwords: true,
+    lemmatization: true,
+    stemming: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  return defaultNLP
+}
+
+// Initialize knowledge base
+function initializeKnowledgeBase() {
+  if (fs.existsSync(KNOWLEDGE_BASE_FILE)) {
+    return JSON.parse(fs.readFileSync(KNOWLEDGE_BASE_FILE, 'utf-8'))
+  }
+
+  const defaultKB: KnowledgeBase = {
+    id: '1',
+    documents: [],
+    searchMethod: 'hybrid',
+    maxRetrievalResults: 5,
+    relevanceThreshold: 0.6,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  fs.writeFileSync(KNOWLEDGE_BASE_FILE, JSON.stringify(defaultKB, null, 2))
+  return defaultKB
+}
+
+// Initialize AI assistant config
+function initializeAIAssistantConfig() {
+  if (fs.existsSync(AI_ASSISTANT_CONFIG_FILE)) {
+    return JSON.parse(fs.readFileSync(AI_ASSISTANT_CONFIG_FILE, 'utf-8'))
+  }
+
+  const defaultConfig: AIAssistantConfig = {
+    id: '1',
+    enabled: true,
+    name: 'Stone Assistant',
+    description: 'Your AI guide for stone cladding solutions',
+    provider: 'openai',
+    model: 'gpt-3.5-turbo',
+    knowledgeBaseEnabled: true,
+    nlpEnabled: true,
+    textToSpeechEnabled: true,
+    textToSpeechVoice: 'default',
+    temperature: 0.7,
+    topP: 1,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+    maxTokens: 500,
+    systemPrompt: 'You are a helpful AI assistant specializing in stone cladding solutions. Provide expert advice about materials, installation, design, and durability. Always be professional and helpful.',
+    accentColor: '#ff8c42',
+    position: 'bottom-right',
+    animationEnabled: true,
+    animationDuration: 300,
+    backgroundColor: 'rgba(10, 10, 10, 0.95)',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  fs.writeFileSync(AI_ASSISTANT_CONFIG_FILE, JSON.stringify(defaultConfig, null, 2))
+  return defaultConfig
+}
+
 // Ensure files exist
 initializeConfig()
 initializeMessages()
@@ -290,6 +586,10 @@ initializeMedia()
 initializeMaterials()
 initializeConsultationConfig()
 initializeImageGallery()
+initializeAIProviders()
+initializeNLPConfig()
+initializeKnowledgeBase()
+initializeAIAssistantConfig()
 
 // Read functions
 export function getMessages(): Message[] {
@@ -521,4 +821,138 @@ export function getMediaByPlacement(placementKey: string): MediaAsset | null {
   
   const media = getMedia()
   return media.find(m => m.id === placement.mediaId) || null
+}
+
+export function getAIAssistantConfig(): AIAssistantConfig {
+  try {
+    return JSON.parse(fs.readFileSync(AI_ASSISTANT_CONFIG_FILE, 'utf-8'))
+  } catch {
+    return initializeAIAssistantConfig()
+  }
+}
+
+export function saveAIAssistantConfig(config: AIAssistantConfig): void {
+  fs.writeFileSync(AI_ASSISTANT_CONFIG_FILE, JSON.stringify(config, null, 2))
+}
+
+export function updateAIAssistantConfig(updates: Partial<AIAssistantConfig>): AIAssistantConfig {
+  const config = getAIAssistantConfig()
+  const updated: AIAssistantConfig = {
+    ...config,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  }
+  saveAIAssistantConfig(updated)
+  return updated
+}
+
+// AI Providers
+export function getAIProviders(): AIProviderConfig[] {
+  try {
+    return JSON.parse(fs.readFileSync(AI_PROVIDERS_FILE, 'utf-8'))
+  } catch {
+    return initializeAIProviders()
+  }
+}
+
+export function saveAIProviders(providers: AIProviderConfig[]): void {
+  fs.writeFileSync(AI_PROVIDERS_FILE, JSON.stringify(providers, null, 2))
+}
+
+export function updateAIProvider(providerId: string, updates: Partial<AIProviderConfig>): AIProviderConfig | null {
+  const providers = getAIProviders()
+  const index = providers.findIndex(p => p.id === providerId)
+  if (index === -1) return null
+  
+  providers[index] = {
+    ...providers[index],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  }
+  saveAIProviders(providers)
+  return providers[index]
+}
+
+export function getAIProvider(provider: AIProvider): AIProviderConfig | null {
+  const providers = getAIProviders()
+  return providers.find(p => p.provider === provider) || null
+}
+
+// NLP Config
+export function getNLPConfig(): NLPConfig {
+  return initializeNLPConfig()
+}
+
+export function updateNLPConfig(updates: Partial<NLPConfig>): NLPConfig {
+  const config: NLPConfig = {
+    ...getNLPConfig(),
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  }
+  return config
+}
+
+// Knowledge Base
+export function getKnowledgeBase(): KnowledgeBase {
+  try {
+    return JSON.parse(fs.readFileSync(KNOWLEDGE_BASE_FILE, 'utf-8'))
+  } catch {
+    return initializeKnowledgeBase()
+  }
+}
+
+export function saveKnowledgeBase(kb: KnowledgeBase): void {
+  fs.writeFileSync(KNOWLEDGE_BASE_FILE, JSON.stringify(kb, null, 2))
+}
+
+export function addKnowledgeBaseDocument(doc: Omit<KnowledgeBaseDocument, 'id' | 'createdAt'>): KnowledgeBaseDocument {
+  const kb = getKnowledgeBase()
+  const newDoc: KnowledgeBaseDocument = {
+    ...doc,
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString(),
+  }
+  kb.documents.push(newDoc)
+  saveKnowledgeBase(kb)
+  return newDoc
+}
+
+export function updateKnowledgeBaseDocument(docId: string, updates: Partial<KnowledgeBaseDocument>): KnowledgeBaseDocument | null {
+  const kb = getKnowledgeBase()
+  const index = kb.documents.findIndex(d => d.id === docId)
+  if (index === -1) return null
+  
+  kb.documents[index] = {
+    ...kb.documents[index],
+    ...updates,
+    metadata: {
+      ...kb.documents[index].metadata,
+      updatedAt: new Date().toISOString(),
+    },
+  }
+  saveKnowledgeBase(kb)
+  return kb.documents[index]
+}
+
+export function deleteKnowledgeBaseDocument(docId: string): boolean {
+  const kb = getKnowledgeBase()
+  const filtered = kb.documents.filter(d => d.id !== docId)
+  if (filtered.length < kb.documents.length) {
+    kb.documents = filtered
+    saveKnowledgeBase(kb)
+    return true
+  }
+  return false
+}
+
+export function updateKnowledgeBaseSettings(updates: Partial<KnowledgeBase>): KnowledgeBase {
+  const kb = getKnowledgeBase()
+  const updated: KnowledgeBase = {
+    ...kb,
+    ...updates,
+    documents: kb.documents,
+    updatedAt: new Date().toISOString(),
+  }
+  saveKnowledgeBase(updated)
+  return updated
 }

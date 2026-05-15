@@ -1,0 +1,192 @@
+[
+  {
+    "id": "1",
+    "provider": "openai",
+    "name": "OpenAI",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "gpt-4-turbo",
+        "name": "gpt-4-turbo-preview",
+        "displayName": "GPT-4 Turbo",
+        "contextWindow": 128000,
+        "costPer1kTokens": 0.01
+      },
+      {
+        "id": "gpt-4",
+        "name": "gpt-4",
+        "displayName": "GPT-4",
+        "contextWindow": 8192,
+        "costPer1kTokens": 0.03
+      },
+      {
+        "id": "gpt-3.5-turbo",
+        "name": "gpt-3.5-turbo",
+        "displayName": "GPT-3.5 Turbo",
+        "contextWindow": 4096,
+        "costPer1kTokens": 0.0005
+      }
+    ],
+    "defaultModel": "gpt-3.5-turbo",
+    "rateLimitPerMinute": 90,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "2",
+    "provider": "anthropic",
+    "name": "Anthropic",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "claude-opus",
+        "name": "claude-3-opus-20240229",
+        "displayName": "Claude 3 Opus",
+        "contextWindow": 200000,
+        "costPer1kTokens": 0.015
+      },
+      {
+        "id": "claude-sonnet",
+        "name": "claude-3-sonnet-20240229",
+        "displayName": "Claude 3 Sonnet",
+        "contextWindow": 200000,
+        "costPer1kTokens": 0.003
+      },
+      {
+        "id": "claude-haiku",
+        "name": "claude-3-haiku-20240307",
+        "displayName": "Claude 3 Haiku",
+        "contextWindow": 200000,
+        "costPer1kTokens": 0.00025
+      }
+    ],
+    "defaultModel": "claude-opus",
+    "rateLimitPerMinute": 50,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "3",
+    "provider": "google",
+    "name": "Google Gemini",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "gemini-pro",
+        "name": "gemini-1.5-pro",
+        "displayName": "Gemini 1.5 Pro",
+        "contextWindow": 1000000,
+        "costPer1kTokens": 0.00125
+      },
+      {
+        "id": "gemini-flash",
+        "name": "gemini-1.5-flash",
+        "displayName": "Gemini 1.5 Flash",
+        "contextWindow": 1000000,
+        "costPer1kTokens": 0.000075
+      }
+    ],
+    "defaultModel": "gemini-pro",
+    "rateLimitPerMinute": 60,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "4",
+    "provider": "deepseek",
+    "name": "DeepSeek",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "deepseek-chat",
+        "name": "deepseek-chat",
+        "displayName": "DeepSeek Chat",
+        "contextWindow": 32000,
+        "costPer1kTokens": 0.0002
+      }
+    ],
+    "defaultModel": "deepseek-chat",
+    "rateLimitPerMinute": 60,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "5",
+    "provider": "xai",
+    "name": "xAI Grok",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "grok-2",
+        "name": "grok-2",
+        "displayName": "Grok 2",
+        "contextWindow": 128000,
+        "costPer1kTokens": 0.002
+      }
+    ],
+    "defaultModel": "grok-2",
+    "rateLimitPerMinute": 60,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "6",
+    "provider": "groq",
+    "name": "Groq",
+    "isConfigured": false,
+    "models": [
+      {
+        "id": "mixtral-8x7b",
+        "name": "mixtral-8x7b-32768",
+        "displayName": "Mixtral 8x7B",
+        "contextWindow": 32768,
+        "costPer1kTokens": 0.00024
+      },
+      {
+        "id": "llama2-70b",
+        "name": "llama2-70b-4096",
+        "displayName": "Llama 2 70B",
+        "contextWindow": 4096,
+        "costPer1kTokens": 0.0007
+      }
+    ],
+    "defaultModel": "mixtral-8x7b",
+    "rateLimitPerMinute": 30,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  },
+  {
+    "id": "7",
+    "provider": "ollama",
+    "name": "Ollama (Local)",
+    "apiKey": "http://localhost:11434",
+    "isConfigured": true,
+    "models": [
+      {
+        "id": "llama2",
+        "name": "llama2",
+        "displayName": "Llama 2",
+        "contextWindow": 4096,
+        "costPer1kTokens": 0
+      },
+      {
+        "id": "mistral",
+        "name": "mistral",
+        "displayName": "Mistral",
+        "contextWindow": 8000,
+        "costPer1kTokens": 0
+      },
+      {
+        "id": "neural-chat",
+        "name": "neural-chat",
+        "displayName": "Neural Chat",
+        "contextWindow": 8000,
+        "costPer1kTokens": 0
+      }
+    ],
+    "defaultModel": "llama2",
+    "rateLimitPerMinute": 100,
+    "createdAt": "2026-05-15T14:17:36.016Z",
+    "updatedAt": "2026-05-15T14:17:36.016Z"
+  }
+]
