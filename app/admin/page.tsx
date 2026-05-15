@@ -8,7 +8,7 @@ import { MessageHistory } from '@/components/admin/message-history'
 import { MaterialsManagement } from '@/components/admin/materials-management'
 import { ConsultationManagement } from '@/components/admin/consultation-management'
 import { ImagePlacementManager } from '@/components/admin/image-placement-manager'
-import { AISettings } from '@/components/admin/ai-settings'
+import { AISettingsAdvanced } from '@/components/admin/ai-settings-advanced'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
             <ConsultationManagement adminKey={adminKey} />
           )}
           {activeTab === 'ai' && (
-            <AISettings adminKey={adminKey} />
+            <AISettingsAdvanced adminKey={adminKey} />
           )}
         </div>
       </div>

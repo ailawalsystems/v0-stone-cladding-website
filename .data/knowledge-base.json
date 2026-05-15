@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "documents": [],
+  "searchMethod": "hybrid",
+  "maxRetrievalResults": 5,
+  "relevanceThreshold": 0.6,
+  "createdAt": "2026-05-15T14:17:36.016Z",
+  "updatedAt": "2026-05-15T14:17:36.016Z"
+}
