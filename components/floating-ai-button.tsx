@@ -1,13 +1,11 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Volume2, VolumeX } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { useAIAssistant } from './ai-assistant-provider'
-import { useState } from 'react'
 
 export default function FloatingAIButton() {
-  const { isOpen, openAssistant, closeAssistant, isSpeaking, stopSpeaking, config } = useAIAssistant()
-  const [isExpanded, setIsExpanded] = useState(false)
+  const { isOpen, openAssistant, config } = useAIAssistant()
 
   if (!config || !config.enabled) return null
 
@@ -31,9 +29,8 @@ export default function FloatingAIButton() {
           exit={{ scale: 0, opacity: 0 }}
           transition={{ duration: animationDuration || 0.3, type: 'spring', stiffness: 400 }}
         >
-          {/* Main Button */}
           <motion.button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={openAssistant}
             className="relative p-4 rounded-full shadow-lg transition-all hover:shadow-xl group"
             style={{
               backgroundColor: config.accentColor,
@@ -65,7 +62,6 @@ export default function FloatingAIButton() {
               />
             </div>
 
-            {/* Tooltip */}
             <motion.div
               className="absolute bottom-full right-0 mb-3 px-3 py-2 bg-black/80 text-white text-sm rounded-lg whitespace-nowrap backdrop-blur-sm"
               initial={{ opacity: 0, y: 10 }}
@@ -77,45 +73,6 @@ export default function FloatingAIButton() {
               {config.name}
             </motion.div>
           </motion.button>
-
-          {/* Quick Actions Panel */}
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                className="absolute bottom-20 right-0 flex flex-col gap-3"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.2 }}
-              >
-                {isSpeaking && (
-                  <motion.button
-                    onClick={stopSpeaking}
-                    className="p-3 rounded-full bg-red-500/90 hover:bg-red-600 text-white shadow-lg transition-all"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="Stop speaking"
-                  >
-                    <VolumeX className="w-5 h-5" />
-                  </motion.button>
-                )}
-
-                <motion.button
-                  onClick={() => {
-                    setIsExpanded(false)
-                    openAssistant()
-                  }}
-                  className="p-3 rounded-full text-white shadow-lg transition-all"
-                  style={{ backgroundColor: config.accentColor }}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Open assistant"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                </motion.button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
