@@ -6,13 +6,14 @@ import { MessageRoutingConfig } from '@/components/admin/message-routing-config'
 import { MediaManagement } from '@/components/admin/media-management'
 import { MessageHistory } from '@/components/admin/message-history'
 import { MaterialsManagement } from '@/components/admin/materials-management'
+import { PortfolioManagement } from '@/components/admin/portfolio-management'
 import { ConsultationManagement } from '@/components/admin/consultation-management'
 import { ImagePlacementManager } from '@/components/admin/image-placement-manager'
 import { AISettingsAdvanced } from '@/components/admin/ai-settings-advanced'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
 
-type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'consultation' | 'ai'
+type Tab = 'routing' | 'messages' | 'media' | 'images' | 'materials' | 'portfolio' | 'consultation' | 'ai'
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('routing')
@@ -144,6 +145,9 @@ export default function AdminDashboard() {
           )}
           {activeTab === 'materials' && (
             <MaterialsManagement adminKey={adminKey} />
+          )}
+          {activeTab === 'portfolio' && (
+            <PortfolioManagement adminKey={adminKey} />
           )}
           {activeTab === 'consultation' && (
             <ConsultationManagement adminKey={adminKey} />

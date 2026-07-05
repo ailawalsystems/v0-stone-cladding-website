@@ -6,6 +6,7 @@ const MESSAGES_FILE = path.join(DB_DIR, 'messages.json')
 const CONFIG_FILE = path.join(DB_DIR, 'config.json')
 const MEDIA_FILE = path.join(DB_DIR, 'media.json')
 const MATERIALS_FILE = path.join(DB_DIR, 'materials.json')
+const PROJECTS_FILE = path.join(DB_DIR, 'projects.json')
 const CONSULTATION_CONFIG_FILE = path.join(DB_DIR, 'consultation-config.json')
 const IMAGE_GALLERY_FILE = path.join(DB_DIR, 'image-gallery.json')
 const AI_ASSISTANT_CONFIG_FILE = path.join(DB_DIR, 'ai-assistant-config.json')
@@ -104,6 +105,33 @@ export interface Material {
   imageUrl: string
   features: string[]
   createdAt: string
+}
+
+export interface PortfolioProject {
+  id: string
+  title: string
+  location: string
+  description: string
+  category: string
+  featureImage: string
+  carouselImages: string[]
+  videoClips: string[]
+  galleryImages: string[]
+  detailedDescription: string
+  features: string[]
+  materials: string[]
+  completionDate: string
+  client?: string
+  budget?: string
+  metrics?: {
+    area?: string
+    sqMeters?: string
+    squareFeet?: string
+  }
+  createdAt: string
+  updatedAt: string
+  isPublished: boolean
+  displayOrder: number
 }
 
 export interface ConsultationChannel {
@@ -291,6 +319,13 @@ function initializeMedia() {
 function initializeMaterials() {
   if (!fs.existsSync(MATERIALS_FILE)) {
     fs.writeFileSync(MATERIALS_FILE, JSON.stringify([], null, 2))
+  }
+}
+
+// Initialize default projects array
+function initializeProjects() {
+  if (!fs.existsSync(PROJECTS_FILE)) {
+    fs.writeFileSync(PROJECTS_FILE, JSON.stringify([], null, 2))
   }
 }
 
@@ -584,6 +619,7 @@ initializeConfig()
 initializeMessages()
 initializeMedia()
 initializeMaterials()
+initializeProjects()
 initializeConsultationConfig()
 initializeImageGallery()
 initializeAIProviders()
@@ -624,6 +660,14 @@ export function getMaterials(): Material[] {
   }
 }
 
+export function getProjects(): PortfolioProject[] {
+  try {
+    return JSON.parse(fs.readFileSync(PROJECTS_FILE, 'utf-8'))
+  } catch {
+    return []
+  }
+}
+
 // Write functions
 export function saveMessages(messages: Message[]): void {
   fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2))
@@ -639,6 +683,10 @@ export function saveMedia(media: MediaAsset[]): void {
 
 export function saveMaterials(materials: Material[]): void {
   fs.writeFileSync(MATERIALS_FILE, JSON.stringify(materials, null, 2))
+}
+
+export function saveProjects(projects: PortfolioProject[]): void {
+  fs.writeFileSync(PROJECTS_FILE, JSON.stringify(projects, null, 2))
 }
 
 // Helper functions
@@ -753,6 +801,57 @@ export function deleteMaterial(id: string): boolean {
     return true
   }
   return false
+}
+
+export function addProject(project: Omit<PortfolioProject, 'id' | 'createdAt' | 'updatedAt'>): PortfolioProject {
+  const projects = getProjects()
+  const newProject: PortfolioProject = {
+    ...project,
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  projects.push(newProject)
+  saveProjects(projects)
+  return newProject
+}
+
+export function updateProject(
+  id: string,
+  updates: Partial<PortfolioProject>
+): PortfolioProject | null {
+  const projects = getProjects()
+  const index = projects.findIndex((p) => p.id === id)
+  if (index === -1) return null
+
+  projects[index] = { 
+    ...projects[index], 
+    ...updates,
+    updatedAt: new Date().toISOString()
+  }
+  saveProjects(projects)
+  return projects[index]
+}
+
+export function deleteProject(id: string): boolean {
+  const projects = getProjects()
+  const filtered = projects.filter((p) => p.id !== id)
+  if (filtered.length < projects.length) {
+    saveProjects(filtered)
+    return true
+  }
+  return false
+}
+
+export function reorderProjects(projectIds: string[]): void {
+  const projects = getProjects()
+  projects.forEach((p, index) => {
+    const newOrder = projectIds.indexOf(p.id)
+    if (newOrder !== -1) {
+      p.displayOrder = newOrder
+    }
+  })
+  saveProjects(projects)
 }
 
 export function getConsultationConfig(): ConsultationConfig {

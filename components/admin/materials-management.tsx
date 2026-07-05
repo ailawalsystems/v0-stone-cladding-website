@@ -29,6 +29,9 @@ export function MaterialsManagement({ adminKey }: MaterialsManagementProps) {
     imageUrl: '',
     features: '',
   })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Fetch materials
   useEffect(() => {
@@ -62,8 +65,53 @@ export function MaterialsManagement({ adminKey }: MaterialsManagementProps) {
       imageUrl: '',
       features: '',
     })
+    setImageFile(null)
+    setImagePreview('')
     setEditingId(null)
     setShowForm(false)
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return formData.imageUrl
+
+    try {
+      setUploadingImage(true)
+      const formDataToSend = new FormData()
+      formDataToSend.append('file', imageFile)
+      formDataToSend.append('type', 'material-image')
+      formDataToSend.append('title', formData.name)
+      formDataToSend.append('description', `Image for ${formData.name}`)
+
+      const response = await fetch('/api/media', {
+        method: 'POST',
+        headers: {
+          'x-admin-key': adminKey,
+        },
+        body: formDataToSend,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        return data.asset.url
+      }
+    } catch (err) {
+      console.error('[v0] Image upload failed:', err)
+    } finally {
+      setUploadingImage(false)
+    }
+    return null
   }
 
   const handleEdit = (material: Material) => {
@@ -78,6 +126,8 @@ export function MaterialsManagement({ adminKey }: MaterialsManagementProps) {
       imageUrl: material.imageUrl,
       features: material.features.join(', '),
     })
+    setImagePreview(material.imageUrl)
+    setImageFile(null)
     setEditingId(material.id)
     setShowForm(true)
   }
@@ -94,8 +144,21 @@ export function MaterialsManagement({ adminKey }: MaterialsManagementProps) {
     }
 
     try {
+      let imageUrl = formData.imageUrl
+
+      // Upload image if a file was selected
+      if (imageFile) {
+        const uploadedUrl = await uploadImage()
+        if (!uploadedUrl) {
+          setError('Failed to upload image')
+          return
+        }
+        imageUrl = uploadedUrl
+      }
+
       const payload = {
         ...formData,
+        imageUrl,
         features: formData.features
           .split(',')
           .map((f) => f.trim())
@@ -299,18 +362,63 @@ export function MaterialsManagement({ adminKey }: MaterialsManagementProps) {
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Material Image */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Image URL
+                  Material Image
                 </label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full glass-sm bg-white/10 border border-white/20 text-white placeholder:text-gray-500 px-4 py-2 rounded-lg focus:border-orange-500/50 focus:outline-none"
-                  placeholder="https://..."
-                />
+                <div className="space-y-3">
+                  {/* Image Preview */}
+                  {(imagePreview || formData.imageUrl) && (
+                    <div className="relative inline-block">
+                      <img 
+                        src={imagePreview || formData.imageUrl} 
+                        alt="Material preview" 
+                        className="h-40 w-40 object-cover rounded-lg border border-white/10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageFile(null)
+                          setImagePreview('')
+                          setFormData({ ...formData, imageUrl: '' })
+                        }}
+                        className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* File Upload */}
+                  <div>
+                    <label className="block">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        disabled={uploadingImage}
+                        className="hidden"
+                      />
+                      <span className="inline-block px-4 py-2 bg-orange-500/20 border border-orange-500/50 rounded-lg text-orange-400 cursor-pointer hover:bg-orange-500/30 transition-colors text-sm font-medium">
+                        {uploadingImage ? 'Uploading...' : imageFile ? 'Change Image' : 'Upload Image'}
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* URL Fallback */}
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-2">Or enter Image URL</label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                      disabled={!!imageFile}
+                      className="w-full glass-sm bg-white/10 border border-white/20 text-white placeholder:text-gray-500 px-4 py-2 rounded-lg focus:border-orange-500/50 focus:outline-none disabled:opacity-50"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Features */}
